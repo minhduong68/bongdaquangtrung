@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập/Đăng ký</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 50px;
+        }
+        .form-container {
+            width: 300px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin: auto;
+        }
+        .form-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        .form-container button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            color: red;
+            margin-top: 10px;
+        }
+        #toggle-msg {
+            cursor: pointer;
+            color: #4CAF50;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2 id="form-title">Đăng Ký Tài Khoản</h2>
+    <form id="auth-form">
+        <input type="text" id="name" placeholder="Tên" required>
+        <input type="text" id="class" placeholder="Lớp" required>
+        <input type="text" id="username" placeholder="Tên đăng nhập" required>
+        <input type="password" id="password" placeholder="Mật khẩu" required>
+        <button type="submit" id="submit-btn">Đăng Ký</button>
+    </form>
+    <p id="toggle-msg" style="cursor: pointer; color: #4CAF50;">Đã có tài khoản? Đăng nhập</p>
+    <p id="message" class="message"></p>
+</div>
+
+<script>
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    let isRegistering = true;  // Default mode is registering
+
+    // Handle form submission
+    document.getElementById('auth-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const name = document.getElementById('name').value;
+        const className = document.getElementById('class').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (isRegistering) {
+            // Đăng ký
+            if (users.some(u => u.username === username)) {
+                document.getElementById('message').textContent = 'Tên đăng nhập đã tồn tại!';
+            } else {
+                users.push({ name, class: className, username, password });
+                localStorage.setItem('users', JSON.stringify(users));
+                document.getElementById('message').textContent = 'Đăng ký thành công! Hãy đăng nhập.';
+                toggleForm();
+            }
+        } else {
+            // Đăng nhập
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                document.getElementById('message').textContent = 'Đăng nhập thành công!';
+                
+                // Lưu thông tin người dùng vào localStorage
+                localStorage.setItem('currentUser', JSON.stringify(user));
+
+                // Chuyển hướng đến Dashboard (index.html hoặc trang bạn muốn)
+                window.location.href = 'dashboard.html';  // Thay 'dashboard.html' bằng trang chính của bạn
+            } else {
+                document.getElementById('message').textContent = 'Sai tên đăng nhập hoặc mật khẩu!';
+            }
+        }
+    });
+
+    // Chuyển giữa chế độ đăng ký và đăng nhập
+    function toggleForm() {
+        isRegistering = !isRegistering;
+        const formTitle = isRegistering ? 'Đăng Ký Tài Khoản' : 'Đăng Nhập';
+        const buttonText = isRegistering ? 'Đăng Ký' : 'Đăng Nhập';
+        const toggleText = isRegistering ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký';
+
+        // Cập nhật tiêu đề và nút bấm khi chuyển đổi
+        document.getElementById('form-title').textContent = formTitle;
+        document.getElementById('submit-btn').textContent = buttonText;
+        document.getElementById('toggle-msg').innerHTML = toggleText;
+
+        // Ẩn trường nhập thông tin khi đăng nhập
+        document.getElementById('name').style.display = isRegistering ? 'block' : 'none';
+        document.getElementById('class').style.display = isRegistering ? 'block' : 'none';
+    }
+
+    // Toggle form between register and login
+    document.getElementById('toggle-msg').addEventListener('click', toggleForm);
+</script>
+
+</body>
+</html>

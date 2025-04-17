@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fanpage Trường - Dự Đoán</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .logo {
+            width: 60px;
+            margin-right: 15px;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #218838;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .warning {
+            color: red;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo" class="logo">
+            <h1>Fanpage Trường THPT Quang Trung</h1>
+        </div>
+    </header>
+
+    <!-- User Dashboard -->
+    <div class="container">
+        <h2>Danh sách Trận Đấu và Dự Đoán</h2>
+
+        <!-- Thông báo lỗi nếu người dùng đã dự đoán -->
+        <div class="warning" id="warningMessage"></div>
+
+        <!-- Trận đấu -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Trận đấu</th>
+                    <th>Thời gian</th>
+                    <th>Loại trận</th>
+                    <th>Link xem</th>
+                    <th>Bình chọn</th>
+                    <th>Dự đoán</th>
+                    <th>Kết quả</th>
+                </tr>
+            </thead>
+            <tbody id="matchList">
+                <!-- Trận đấu sẽ hiển thị ở đây -->
+            </tbody>
+        </table>
+
+        <!-- Dự đoán -->
+        <div class="form-container">
+            <select id="matchSelect" class="form-control" onchange="updatePredictionOptions()">
+                <option value="">Chọn trận đấu để dự đoán</option>
+            </select>
+            <select id="teamPrediction" class="form-control">
+                <option value="">Chọn đội</option>
+            </select>
+            <button class="btn" onclick="submitPrediction()">Dự đoán</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to load matches from localStorage and display them
+        function loadMatches() {
+            const matchList = document.getElementById("matchList");
+            const matchSelect = document.getElementById("matchSelect");
+            const warningMessage = document.getElementById("warningMessage");
+            matchList.innerHTML = '';
+            matchSelect.innerHTML = '<option value="">Chọn trận đấu để dự đoán</option>';
+
+            let matches = JSON.parse(localStorage.getItem('matches')) || [];
+            matches.forEach((match, index) => {
+                // Display matches with team names
+                matchList.innerHTML += `
+                    <tr>
+                        <td>${match.teamA} vs ${match.teamB}</td>
+                        <td>${match.matchTime}</td>
+                        <td>${match.matchType}</td>
+                        <td><a href="${match.matchLink}" target="_blank">Xem trực tiếp</a></td>
+                        <td>${match.votes.teamA + match.votes.teamB}</td>
+                        <td>${match.predictions}</td>
+                        <td>${match.result}</td>
+                    </tr>
+                `;
+
+                // Populate match select for predictions with dynamic team names
+                matchSelect.innerHTML += `<option value="${index}">${match.teamA} vs ${match.teamB}</option>`;
+            });
+
+            // Check if the user has already predicted
+            const userPrediction = localStorage.getItem('userPrediction');
+            if (userPrediction) {
+                warningMessage.textContent = 'Bạn đã dự đoán rồi! Bạn không thể dự đoán lại.';
+                document.querySelector('button').disabled = true;
+            } else {
+                warningMessage.textContent = '';
+                document.querySelector('button').disabled = false;
+            }
+        }
+
+        // Update prediction options based on selected match
+        function updatePredictionOptions() {
+            const matchSelect = document.getElementById("matchSelect");
+            const teamPrediction = document.getElementById("teamPrediction");
+            const matchIndex = matchSelect.value;
+
+            if (matchIndex === "") {
+                teamPrediction.innerHTML = '<option value="">Chọn đội</option>';
+                return;
+            }
+
+            let matches = JSON.parse(localStorage.getItem('matches')) || [];
+            const selectedMatch = matches[matchIndex];
+
+            // Update the prediction options with the team names
+            teamPrediction.innerHTML = `
+                <option value="teamA">${selectedMatch.teamA}</option>
+                <option value="teamB">${selectedMatch.teamB}</option>
+            `;
+        }
+
+        // Function to submit a prediction
+        function submitPrediction() {
+            const matchSelect = document.getElementById("matchSelect");
+            const teamPrediction = document.getElementById("teamPrediction");
+            const matchIndex = matchSelect.value;
+            const prediction = teamPrediction.value;
+
+            if (!matchIndex) {
+                alert('Vui lòng chọn trận đấu để dự đoán.');
+                return;
+            }
+
+            if (!prediction) {
+                alert('Vui lòng chọn đội để dự đoán.');
+                return;
+            }
+
+            // Check if the user has already predicted
+            if (localStorage.getItem('userPrediction')) {
+                alert('Bạn đã dự đoán rồi! Bạn không thể dự đoán lại.');
+                return;
+            }
+
+            let matches = JSON.parse(localStorage.getItem('matches')) || [];
+            const selectedMatch = matches[matchIndex];
+
+            if (prediction === 'teamA') {
+                selectedMatch.votes.teamA++;
+            } else {
+                selectedMatch.votes.teamB++;
+            }
+
+            // Store the user's prediction in localStorage
+            localStorage.setItem('userPrediction', true);
+
+            // Save updated matches to localStorage
+            localStorage.setItem('matches', JSON.stringify(matches));
+
+            loadMatches();  // Reload the match list to reflect updated votes
+        }
+
+        // Initial load of matches
+        loadMatches();
+    </script>
+
+</body>
+</html>

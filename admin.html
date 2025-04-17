@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản trị Dự Đoán Bóng Đá</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .logo {
+            width: 60px;
+            margin-right: 15px;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            margin-bottom: 30px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #218838;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .clear-btn {
+            background-color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+
+            header {
+                padding: 15px 0;
+            }
+
+            .container {
+                width: 95%;
+            }
+
+            .form-control {
+                font-size: 14px;
+            }
+
+            .btn {
+                font-size: 14px;
+            }
+
+            .table th, .table td {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER: Logo và Tên Trường -->
+    <header>
+        <div class="logo-container">
+            <img src="logo.png" alt="Trường Quang Trung" class="logo">
+            <h1>Trường THPT Quang Trung - Hưng Yên</h1>
+        </div>
+    </header>
+
+    <!-- Admin Dashboard -->
+    <div class="container">
+        <h2>Quản lý Trận Đấu</h2>
+
+        <!-- Thêm trận đấu -->
+        <div class="form-container">
+            <form id="addMatchForm">
+                <input type="text" id="teamA" class="form-control" placeholder="Đội A" required>
+                <input type="text" id="teamB" class="form-control" placeholder="Đội B" required>
+                <input type="datetime-local" id="matchTime" class="form-control" required>
+                <select id="matchType" class="form-control">
+                    <option value="Vòng loại">Vòng loại</option>
+                    <option value="Tứ kết">Tứ kết</option>
+                    <option value="Bán kết">Bán kết</option>
+                    <option value="Chung kết">Chung kết</option>
+                </select>
+                <input type="url" id="matchLink" class="form-control" placeholder="Link xem trực tiếp" required>
+                <button type="submit" class="btn">Thêm trận đấu</button>
+            </form>
+        </div>
+
+        <!-- Cập nhật kết quả trận đấu -->
+        <div class="form-container">
+            <h3>Cập nhật kết quả trận đấu</h3>
+            <form id="updateResultForm">
+                <select id="matchSelect" class="form-control" required>
+                    <option value="">Chọn trận đấu</option>
+                </select>
+                <input type="number" id="minute" class="form-control" placeholder="Phút ghi bàn" min="1" required>
+                <input type="text" id="scorer" class="form-control" placeholder="Ai ghi bàn?" required>
+                <select id="scoringTeam" class="form-control" required>
+                    <option value="teamA">Đội A</option>
+                    <option value="teamB">Đội B</option>
+                </select>
+                <button type="submit" class="btn">Cập nhật kết quả</button>
+            </form>
+        </div>
+
+        <!-- Quản lý trận đấu: Danh sách và Xóa -->
+        <h3>Danh sách trận đấu</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Trận đấu</th>
+                    <th>Thời gian</th>
+                    <th>Loại trận</th>
+                    <th>Link xem</th>
+                    <th>Số người dự đoán</th>
+                    <th>Kết quả</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="matchList">
+                <!-- Các trận đấu sẽ hiển thị ở đây -->
+            </tbody>
+        </table>
+
+        <!-- Clear all past matches -->
+        <div class="form-container">
+            <button class="btn clear-btn" onclick="clearPastMatches()">Clear các trận đã qua</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("addMatchForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const teamA = document.getElementById("teamA").value;
+            const teamB = document.getElementById("teamB").value;
+            const matchTime = document.getElementById("matchTime").value;
+            const matchType = document.getElementById("matchType").value;
+            const matchLink = document.getElementById("matchLink").value;
+
+            const newMatch = {
+                teamA,
+                teamB,
+                matchTime,
+                matchType,
+                matchLink,
+                teamAScore: 0,
+                teamBScore: 0,
+                predictions: 0,
+                result: 'Chưa có kết quả',
+                scorer: [],
+                minutes: [],
+                votes: { teamA: 0, teamB: 0 }
+            };
+
+            // Load existing matches from localStorage
+            let matches = JSON.parse(localStorage.getItem('matches')) || [];
+
+            // Add new match to matches array
+            matches.push(newMatch);
+
+            // Save matches back to localStorage
+            localStorage.setItem('matches', JSON.stringify(matches));
+
+            displayMatches();  // Refresh the match list immediately after adding
+            updateMatchSelect(); // Update the match select dropdown
+        });
+
+        // Function to display matches
+        function displayMatches() {
+            const matchList = document.getElementById("matchList");
+            matchList.innerHTML = '';
+
+            let matches = JSON.parse(localStorage.getItem('matches')) || [];
+
+            matches.forEach((match, index) => {
+                let goalDetails = '';
+                for (let i = 0; i < match.scorer.length; i++) {
+                    goalDetails += `Phút ${match.minutes[i]}: ${match.scorer[i]} ghi bàn<br>`;
+                }
+
+                matchList.innerHTML += `
+                    <tr>
+                        <td>${match.teamA} vs ${match.teamB}</td>
+                        <td>${match.matchTime}</td>
+                        <td>${match.matchType}</td>
+                        <td><a href="${match.matchLink}" target="_blank">Xem trực tiếp</a></td>
+                        <td>${match.predictions}</td>
+                        <td>${match.result} <br> ${goalDetails}</td>
+                        <td><button class="btn clear-btn" onclick="deleteMatch(${index})">Xóa</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Function to update the match select dropdown
+        function updateMatchSelect() {
+            const matchSelect = document.getElementById("matchSelect");
+            let matches = JSON.parse(localStorage.getItem('matches')) || [];
+            matchSelect.innerHTML = `<option value="">Chọn trận đấu</option>`;
+
+            matches.forEach((match, index) => {
+                matchSelect.innerHTML += `<option value="${index}">${match.teamA} vs ${match.teamB}</option>`;
+            });
+        }
+
+        // Function to delete a match
+        function deleteMatch(index) {
+            let matches = JSON.parse(localStorage.getItem('matches')) || [];
+            matches.splice(index, 1);
+            localStorage.setItem('matches', JSON.stringify(matches));
+            displayMatches();
+        }
+
+        // Initial display of matches
+        displayMatches();
+        updateMatchSelect();
+    </script>
+</body>
+</html>
