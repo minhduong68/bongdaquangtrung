@@ -66,9 +66,44 @@
 
 <script>
     let users = JSON.parse(localStorage.getItem('users')) || [];
-    let isRegistering = true;  // Default mode is registering
+    let isRegistering = true;
 
-    // Handle form submission
+    // Nếu từng chuyển sang chế độ đăng nhập trước đó, lưu lại
+    if (localStorage.getItem('authMode') === 'login') {
+        isRegistering = false;
+    }
+
+    // Toggle giữa đăng ký / đăng nhập
+    function toggleForm() {
+        isRegistering = !isRegistering;
+        localStorage.setItem('authMode', isRegistering ? 'register' : 'login');
+
+        const formTitle = isRegistering ? 'Đăng Ký Tài Khoản' : 'Đăng Nhập';
+        const buttonText = isRegistering ? 'Đăng Ký' : 'Đăng Nhập';
+        const toggleText = isRegistering ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký';
+
+        document.getElementById('form-title').textContent = formTitle;
+        document.getElementById('submit-btn').textContent = buttonText;
+        document.getElementById('toggle-msg').textContent = toggleText;
+
+        // Ẩn hiện trường thông tin
+        document.getElementById('name').style.display = isRegistering ? 'block' : 'none';
+        document.getElementById('class').style.display = isRegistering ? 'block' : 'none';
+    }
+
+    // Gán sự kiện cho nút chuyển đổi
+    document.getElementById('toggle-msg').addEventListener('click', toggleForm);
+
+    // Gọi khi trang vừa load
+    window.onload = function () {
+        // Gọi đúng theo trạng thái lưu trước đó
+        if (!isRegistering) {
+            toggleForm();
+        }
+        document.getElementById('message').textContent = '';
+    };
+
+    // Xử lý form
     document.getElementById('auth-form').addEventListener('submit', function (e) {
         e.preventDefault();
         const name = document.getElementById('name').value;
@@ -77,7 +112,6 @@
         const password = document.getElementById('password').value;
 
         if (isRegistering) {
-            // Đăng ký
             if (users.some(u => u.username === username)) {
                 document.getElementById('message').textContent = 'Tên đăng nhập đã tồn tại!';
             } else {
@@ -87,41 +121,15 @@
                 toggleForm();
             }
         } else {
-            // Đăng nhập
             const user = users.find(u => u.username === username && u.password === password);
             if (user) {
-                document.getElementById('message').textContent = 'Đăng nhập thành công!';
-                
-                // Lưu thông tin người dùng vào localStorage
                 localStorage.setItem('currentUser', JSON.stringify(user));
-
-                // Chuyển hướng đến Dashboard (index.html hoặc trang bạn muốn)
-                window.location.href = 'dashboard.html';  // Thay 'dashboard.html' bằng trang chính của bạn
+                window.location.href = 'dashboard.html'; // Trang chính sau khi đăng nhập
             } else {
                 document.getElementById('message').textContent = 'Sai tên đăng nhập hoặc mật khẩu!';
             }
         }
     });
-
-    // Chuyển giữa chế độ đăng ký và đăng nhập
-    function toggleForm() {
-        isRegistering = !isRegistering;
-        const formTitle = isRegistering ? 'Đăng Ký Tài Khoản' : 'Đăng Nhập';
-        const buttonText = isRegistering ? 'Đăng Ký' : 'Đăng Nhập';
-        const toggleText = isRegistering ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký';
-
-        // Cập nhật tiêu đề và nút bấm khi chuyển đổi
-        document.getElementById('form-title').textContent = formTitle;
-        document.getElementById('submit-btn').textContent = buttonText;
-        document.getElementById('toggle-msg').innerHTML = toggleText;
-
-        // Ẩn trường nhập thông tin khi đăng nhập
-        document.getElementById('name').style.display = isRegistering ? 'block' : 'none';
-        document.getElementById('class').style.display = isRegistering ? 'block' : 'none';
-    }
-
-    // Toggle form between register and login
-    document.getElementById('toggle-msg').addEventListener('click', toggleForm);
 </script>
 
 </body>
